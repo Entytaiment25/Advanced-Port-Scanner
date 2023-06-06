@@ -18,6 +18,7 @@ Y8b.     888  888 Y88b.  Y88b 888
                           "Y88P"  
 """
 
+
 def scan_port(ip, port, timeout=0.5, check_service=False):
     try:
         with socket.create_connection((ip, port), timeout=timeout) as sock:
@@ -28,6 +29,7 @@ def scan_port(ip, port, timeout=0.5, check_service=False):
     except socket.error as e:
         return port, None, str(e)
 
+
 def scan_ports(target, start_port, end_port, num_threads=100, check_service=False):
     try:
         ip = socket.gethostbyname(target)
@@ -36,9 +38,15 @@ def scan_ports(target, start_port, end_port, num_threads=100, check_service=Fals
         open_ports = []
         errors = []
         with concurrent.futures.ThreadPoolExecutor(max_workers=num_threads) as executor:
-            futures = [executor.submit(scan_port, ip, port, check_service=check_service) for port in range(start_port, end_port + 1)]
+            futures = [
+                executor.submit(scan_port, ip, port, check_service=check_service)
+                for port in range(start_port, end_port + 1)
+            ]
 
-            for future in tqdm(concurrent.futures.as_completed(futures), total=end_port - start_port + 1):
+            for future in tqdm(
+                concurrent.futures.as_completed(futures),
+                total=end_port - start_port + 1,
+            ):
                 port, result, service_name = future.result()
                 if result is True:
                     open_ports.append((port, service_name))
@@ -62,6 +70,7 @@ def scan_ports(target, start_port, end_port, num_threads=100, check_service=Fals
     except KeyboardInterrupt:
         print("\nScan interrupted.")
 
+
 # Print ASCII art
 print(colored(ascii_art, "magenta"))
 
@@ -72,7 +81,9 @@ except KeyboardInterrupt:
     print("\nInput interrupted.")
     exit()
 
-range_option = input("Do you want to scan the entire port range (0 - 65535)? (Y/N): ").lower()
+range_option = input(
+    "Do you want to scan the entire port range (0 - 65535)? (Y/N): "
+).lower()
 
 if range_option == "y":
     start_port = 0
@@ -86,7 +97,9 @@ else:
         exit()
 
 num_threads = int(input("Enter the number of threads to use (recommended: 100): "))
-check_service = input("Do you want to check the associated service names? (Y/N): ").lower() == "y"
+check_service = (
+    input("Do you want to check the associated service names? (Y/N): ").lower() == "y"
+)
 
 # Perform the port scan
 scan_ports(target, start_port, end_port, num_threads, check_service)
